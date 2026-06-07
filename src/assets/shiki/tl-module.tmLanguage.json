@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "tl-module",
+  "scopeName": "text.tl-module",
+  "patterns": [
+    {
+      "name": "comment.tl",
+      "match": "//.*"
+    },
+    {
+      "match": "(module) ([a-z0-9_]+)",
+      "captures": {
+        "1": { "name": "keyword.tl.module" },
+        "2": { "name": "identifier.tl.module" }
+      }
+    },
+    {
+      "match": "([a-z0-9-]+) (.+)",
+      "captures": {
+        "1": { "name": "keyword.tl.module" },
+        "2": { "patterns": [{ "include": "#mod-value" }] }
+      }
+    },
+    {
+      "name": "identifier.tl.attribute",
+      "match": "\\[.+]"
+    }
+  ],
+  "repository": {
+    "mod-value": {
+      "patterns": [{ "include": "#string" }, { "include": "#number" }, { "include": "#class" }]
+    },
+    "strings": {
+      "match": "\".*\"",
+      "name": "string.tl"
+    },
+    "number": {
+      "match": "\\d+(\\.\\d+)?",
+      "name": "constant.numeric.tl"
+    },
+    "class": {
+      "match": "([a-z0-9_]+|mod)((\\.[a-z0-9A-Z$_]+)+)",
+      "captures": {
+        "1": { "name": "constant.tl.module" },
+        "2": { "name": "identifier.tl.package_class" }
+      }
+    }
+  }
+}

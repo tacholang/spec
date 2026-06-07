@@ -1,0 +1,129 @@
+---
+title: File Structure
+description: Tacholang files specification.
+---
+
+Tacho files always have the `.tl` suffix (short for Tacholang). Every Tacholang file specifies exactly one top-level class with the
+same named as the file, with the only exception being `partial` classes. This is further explained in
+[`Classes > Partial Class`](/spec/classes#partial-class).
+
+## Implicit Class
+
+If a file does not contain a class definition, a `public static`-class is defined implicitly. This means the following two files
+are completely identical:
+
+```tl title="Main.tl"
+import std.io.Console
+
+int main() {
+  Console.println("Hello from Tacho!")
+}
+```
+
+```tl title="Main.tl"
+import std.io.Console
+
+public static class Main
+
+int main() {
+  Console.println("Hello from Tacho!")
+}
+```
+
+## Referencing Classes
+
+At the start of each Tacholang file, the imports are defined. **These need to be declared before any other statements**. If you add
+an import statement after any other statement, the compiler will throw an error.
+
+Three import types exist.
+
+### Full Imports
+
+This refers to simple single-class imports of the following form:
+
+```tl
+import std.io.Console
+```
+
+This import statement imports the `io.Console` class from the `std` module. You can now use `Console` in the file to reference
+that exact class. You cannot import two classes of the same name this way.
+
+### Package Imports
+
+You can import full packages at a time. This is down with an `import package` statement:
+
+```tl
+import package std.io
+```
+
+You can now use all classes inside the `io` package of the `std` module. A package cannot contain two classes of the same name, however,
+if you import two packages, and they happen to have a class of the same name, to reference one or the other, you **must** add
+an explicit full import for that one class.
+
+Full imports always take precedence over package imports due to being unambiguous.
+
+The current package is always imported implicitly.
+
+### Direct Import
+
+Not so much a file-wide import, instead a way to directly reference a class, even if a class of the same was imported with a full import
+already.
+
+```tl
+import std.io.Console
+
+void foo() {
+  Console.println("Hello there!")
+  mod.checkers.Console.contains("Hello there!")
+}
+```
+
+## Nesting Classes
+
+You can nest classes. **Nested classes are always private**. If you need a non-private nested class, consider creating a new package.
+This is particularly useful if you want to add a data holder class for use in only your own class.
+To do this, you can add another class definition inside your file after the primary class definition; however, that nested
+definition will need braces if you want to add methods.
+
+```tl title="BinaryTree.tl"
+import package std.collections
+import std.util.Comparator
+
+public final class BinaryTree<T>(
+  private final Comparator<T> compare
+) implements ListLike<T>
+
+private final Node<T> rootNode = new(null)
+
+public override List<T> asList() => rootNode.asList()
+public void insert(T value) => rootNode.insert(value)
+
+class Node<T>(private T? value) implements ListLike<T> {
+  private lazy Node<T> left = new(null)
+  private lazy Node<T> right = new(null)
+
+  public void insert(T value) {
+    if this.value == null {
+      this.value = value
+      return
+    }
+
+    if compare(value, this.value) {
+      left.insert(value)
+    } else {
+      right.insert(value)
+    }
+  }
+
+  public override List<T> asList() {
+    List<T> out = ForwardingList.new()
+    if left => out.addAll(left.asList())
+    if value => out.add(value)
+    if right => out.addAll(right.asList())
+    return out
+  }
+}
+```
+
+A nested class also always has access to the private fields and methods of the surrounding class. The surrounding class may implement
+nested interfaces or extend nested classes.

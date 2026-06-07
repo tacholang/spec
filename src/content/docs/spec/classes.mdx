@@ -1,0 +1,359 @@
+---
+title: Classes
+description: Tacholang class specification.
+tableOfContents:
+  maxHeadingLevel: 4
+---
+
+Every Tacholang file needs to contain exactly one top-level class. The name of this class is the same as the file itself.
+So a file named `Fruit.tl` always has to contain a class `Fruit`.
+
+A simple file may look like this:
+```tl title="Fruit.tl"
+import package std.io
+
+public class Fruit(private int count)
+
+public int addCount() {
+  count += 1
+  return count
+}
+
+public void printCount() {
+  Console.println("Fruit count: " + count)
+}
+```
+
+In Java, this code would be equivalent to the following class:
+
+```java title="Fruit.java"
+public class Fruit {
+  private int count;
+
+  public Fruit(int count) {
+    this.count = count;
+  }
+
+  public int addCount() {
+    count += 1;
+    return count;
+  }
+
+  public void printCount() {
+    System.out.println("Fruit count: " + count);
+  }
+}
+```
+
+## Class Types
+
+### Implicit Class
+
+This is not as much a class as a specific way that files are handled. Tacho allows you to define classes implicitly. If you create
+a new file without a `class` declaration, an implicit `public static` class is instead used. This means, the following two files
+are completely identical:
+
+```tl title="Main.tl"
+import std.io.Console
+
+int main() {
+  Console.println("Hello from Tacho!")
+}
+```
+
+```tl title="Main.tl"
+import std.io.Console
+
+public static class Main
+
+int main() {
+  Console.println("Hello from Tacho!")
+}
+```
+
+### Explicit Class
+
+The standard class is defined with a `class` type. Adding special modifiers to the `class` type can change the functionality
+of the class.
+
+```tl
+// A generic class.
+class Foo
+
+// A partial class allows for other partial classes of the
+//   same name to be defined.
+// A partial class is the only case where the file name does
+//   not have to match the file name.
+partial class Foo
+
+// Abstract classes cannot be constructed directly.
+abstract class Foo
+
+// Static classes cannot be constructed or have any constructor parameters.
+// All methods and fields are implicitly static and final.
+static class Foo
+```
+
+#### Partial Class
+
+Partial classes are the primary way code-generating libraries should hook into classes to add methods/fields dynamically.
+They can also be used to split up a bigger class into more sizable chunks. Partial classes generally behave similarly
+to normal classes. Partial classes can be declared as `abstract` or `static`. This modifier only needs to exists
+in the primary class file (the file named the same way as the class), modifiers in order files are ignored.
+
+Partial class extensions can only exist inside the same module, you cannot add to a partial class from a different
+module.
+
+A field or method declared as `private` inside a partial class can be accessed from any other partial class extension.
+
+At least one file needs to be named the same way as the class itself. Any other files extending onto the partial class must
+contain the class name but may add arbitrary suffixes.
+
+```tl title="Animal.tl"
+partial class Animal(private string sound)
+```
+
+```tl title="AnimalSounds.tl"
+import std.io.Console
+
+partial class Animal
+
+void makeSound() {
+  Console.println($"The animal does a '${sound}' sound.")
+}
+```
+
+Externally, this will treat the `Animal` as one single class and is usable as such:
+```tl title="Main.tl"
+int main() {
+  Animal pig = new("oink")
+  pig.makeSound()
+}
+```
+
+#### Abstract Class
+
+A class declared as `abstract` must be extended by another class for instance of that class to exist. Abstract classes may
+declare abstract methods, which hold no default implementation and must be implemented by extending classes.
+
+Abstract classes may have a constructor, which has to be called by extending classes.
+
+```tl title="AbstractAnimal.tl"
+import std.io.Console
+
+abstract class AbstractAnimal(protected string sound)
+
+// Final makes a method not be overridable
+final void makeSound() {
+  Console.println($"The animal does a '${sound}' sound.")
+}
+
+abstract Self withSound(string othersound);
+```
+
+```tl title="Pig.tl"
+class Pig extends AbstractAnimal("oink")
+
+// A private constructor, which calls the constructor
+// of AbstractAnimal with a custom parameter.
+private new(string customSound) => super(customSound)
+
+override Pig withSound(string othersound) => Pig.new(othersound)
+```
+
+#### Static classes
+
+Static classes do not allow having instances created of it. All methods and fields are implicitly `static`. However, you can still
+implement interfaces/extend abstract classes. Static classes handled in a special way, in that *one* instance technically always exists.
+You can pass the class name around like a normal object, very similar to Kotlin's `object` classes.
+
+```tl title="EdgarThePig.tl"
+static class EdgarThePig extends AbstractAnimal("OINK OINK")
+
+public bool doesEdgarLikeYou() => false
+```
+
+```tl title="Main.tl"
+int main() {
+  // This throws a compile-time error
+  EdgarThePig edgar = new()
+
+  // This is actually completely fine
+  EdgarThePig edgar = EdgarThePig
+
+  // These work fine
+  this.doSound(edgar)
+  this.doSound(EdgarThePig)
+
+  // All methods are static in static classes
+  return (int) EdgarThePig.doesEdgarLikeYou()
+}
+
+private void doSound(AbstractAnimal animal) => animal.makeSound()
+```
+
+### Interfaces
+Interfaces are a special class type that cannot have a constructor or fields, and methods are implicitly public. Whilst a class can only
+extend a single class, it can implement multiple interfaces at once. Methods may be declared without a body or have a default
+implementation.
+
+```tl title="CatLike.tl"
+public interface CatLike
+
+// Method needs to be implemented by every implementing class
+string meowSound()
+
+// Method implementaiton already provided; may be overriden
+string strongerMeowSound() => meowSound().upperCase()
+```
+
+Interfaces can be implemented:
+
+```tl title="Cat.tl"
+public class Cat implements CatLike
+
+// Only #meowSound needs to be implemented,
+//   #strongerMeowSound already has an implementation
+override meowSound() => "meow"
+```
+
+### Enums
+
+An enum is a special type of class, which can have multiple enum values defined. Each enum value has a name
+and an auto-assigned ordinal. Enums can have methods and a primary constructor to set final fields. Enums can
+implement interfaces.
+
+All enum values need to be defined before any methods are declared. By default, enums have the following methods:
+```tl title="Enum.tl"
+//// This file is part of the language specifications.
+
+public abstract class Enum
+
+/// The literal name of the enum value, as defined in the source file.
+public noimpl string name()
+/// The order of the enum value, zero-indexed.
+public noimpl uint ordinal()
+
+/// The lowercased literal name of the enum value, as defined in the source file.
+public final string lowercaseName() => name.lowercase()
+/// A default override of the toString method.
+public override string toString() => name()
+
+/// An unmodifiable array of all values denoted in this enum class.
+public static noimpl self![] values()
+/// Attempt to get an enum value by name.
+public static noimpl self? byNamed(string name)
+/// Attempt to get an enum value by ordinal.
+public static noimpl self? byOrdinal(uint ordinal)
+```
+
+```tl title="Color.tl"
+import package std.color
+
+public enum EnumColor(get uint argb) implements ColorLike
+
+RESET(0)
+
+RED(0xFFFF0000)
+GREEN(0xFF00FF00)
+BLUE(0xFF0000FF)
+
+public Color toColor() => Color.ofARGB(this.argb())
+```
+
+### Records
+
+A `record`-type class is an **immutable** class, where all fields are implicitly `private final get`. The record class itself is
+also implicitly `final`. The following two class definitions are functionally identical:
+
+```tl title="Person.tl"
+public final class Person(
+  private final get string firstName,
+  private final get string lastName,
+  private final get int currentAge,
+  private final get string favoriteColor,
+)
+```
+```tl title="Person.tl"
+public record Person(
+  string firstName,
+  string lastName,
+  int currentAge,
+  string favoriteColor,
+)
+```
+
+Record components (each field) may be attributed. In that case, the attributed element is of type `RECORD_COMPONENT` instead of
+the generic `FIELD`.
+
+## Class modifiers
+
+### Visibility modifiers
+
+Classes without visibility modifiers are implicitly `package-private`. You may add a visibility modifier before any type modifiers.
+Only one visibility modifier may the present. The following visibility modifiers exist for classes:
+
+- `package-private`: **Default**. The class can only be accessed inside the same package.
+- `package-internal`: The class can only be accessed inside the same or child packages.
+- `internal`: The class can be accessed everywhere in the current module.
+- `public`: The class may be accessed everywhere, even outside the current module.
+
+### Type modifiers
+
+Type modifiers change the way the class type behaves and interacts with other classes or during runtime.
+
+- `final`: A class defined as `final` may not be extended. This can only be applied to non-static and non-abstract generic classes.
+
+- `value`: A value class is a class which is passed by value instead of by reference. Instead of passing a pointer, which points to where
+  the values of the fields live, the actual memory for those fields is copied instead. This can help improve performance when working with
+  a lot of objects packed together (like in a list), but may cause performance degradation with large objects. Mutable OOP design is also
+  not possible unless you wrap the value in a reference (`ref` parameter).
+
+### Custom modifiers
+
+Libraries with compiler plugin functionality (or short: compiler plugins) may add custom modifiers to classes.
+
+## Generic types
+
+Tacholang classes support generic types. These can be added to a class and used like normal types. You can add a bound to generics
+to limit which types the generic type may hold.
+
+```tl title="LazyList.tl"
+public class LazyList<T>(
+  private final uint initialSize
+) implements DelegatingList<T>
+
+private lazy List<T> internalList = ArrayList.new(initialSize)
+
+public override List<T> delegateList() => internalList
+```
+
+To add a type bound, you can use `:`, followed by the type(s) the type needs to implement.
+
+```tl title="SerializableHumanoidsList.tl"
+public class SerializableHumanoidsList<T : Serializable & Humanoids>
+  implements DelegatingList<T>
+
+public const override List<T> delegateList() => ArrayList.new(2)
+```
+
+Different to languages like Java, generic types exist in runtime. Generic types can be used like references to a class type.
+
+```tl title="Pair.tl"
+public record Pair<L, R>(L left, R right)
+
+public const bool isLeftNumber() => L.canCast(int)
+public const bool isRightNumber() => R.canCast(int)
+```
+
+You can even access the generic types of other objects.
+
+```tl
+int main() {
+  List<?> list = foo()
+  if list.E.canCast(int) {
+    List<int> intList = (List<int>) list
+    Console.println($"The returned list has integer elements! Values: ${intList}")
+  }
+}
+```

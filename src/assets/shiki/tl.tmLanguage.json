@@ -1,0 +1,574 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "tl",
+  "scopeName": "text.tl",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+
+    {
+      "match": "import package (.*)",
+      "name": "keyword.other.import.tl",
+      "captures": {
+        "1": { "patterns": [{ "include": "#package" }] }
+      }
+    },
+    {
+      "match": "import (.*)",
+      "name": "keyword.other.import.tl",
+      "captures": {
+        "1": { "patterns": [{ "include": "#class-type-fqn" }] }
+      }
+    },
+
+    {
+      "include": "#code"
+    }
+  ],
+
+  "repository": {
+    "code": {
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#attribute"
+        },
+
+        {
+          "begin": "(.*)(class|record|enum) ([A-Za-z0-9$_]+)(\\<[^>]+\\>)?(\\()",
+          "beginCaptures": {
+            "1": {
+              "patterns": [{ "include": "#modifiers" }]
+            },
+            "2": {
+              "name": "storage.class-type.tl"
+            },
+            "3": {
+              "name": "constant.tl.class_name"
+            },
+            "4": {
+              "patterns": [
+                {
+                  "match": "[<>]",
+                  "name": "punctuation.tl"
+                },
+                {
+                  "include": "#generic-type-definitions"
+                }
+              ]
+            },
+            "5": { "name": "punctuation.tl" }
+          },
+          "patterns": [{ "include": "#primary-constructor" }],
+          "end": "\\)",
+          "endCaptures": {
+            "0": { "name": "punctuation.tl" }
+          }
+        },
+        {
+          "match": "(.*)(class|record|interface|enum) ([A-Za-z0-9$_]+)(\\<[^>]+\\>)?",
+          "captures": {
+            "1": {
+              "patterns": [{ "include": "#modifiers" }]
+            },
+            "2": {
+              "name": "storage.class-type.tl"
+            },
+            "3": {
+              "name": "constant.tl.class_name"
+            },
+            "4": {
+              "patterns": [
+                {
+                  "match": "[<>]",
+                  "name": "punctuation.tl"
+                },
+                {
+                  "include": "#generic-type-definitions"
+                }
+              ]
+            }
+          }
+        },
+
+        {
+          "begin": "(extends) ([a-zA-Z0-9$_]+(<[^>]+>)?)(\\()",
+          "end": "\\)",
+          "beginCaptures": {
+            "1": {
+              "name": "storage.keyword.tl"
+            },
+            "2": {
+              "patterns": [{ "include": "#type" }]
+            },
+            "4": {
+              "name": "punctuation.tl"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.tl"
+            }
+          },
+          "patterns": [
+            {
+              "match": ",",
+              "name": "punctuation.tl"
+            },
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "match": "(extends) ([a-zA-Z0-9$_]+(<[^>]+>)?)",
+          "captures": {
+            "1": {
+              "name": "storage.keyword.tl"
+            },
+            "2": {
+              "patterns": [{ "include": "#type" }]
+            }
+          }
+        },
+        {
+          "match": "(implements) (([a-zA-Z0-9$_<>]+)(, ([a-zA-Z0-9$_<>]+))*)",
+          "captures": {
+            "1": { "name": "storage.keyword.tl" },
+            "2": {
+              "patterns": [
+                {
+                  "match": ",",
+                  "name": "punctuation.tl"
+                },
+                { "include": "#type" }
+              ]
+            }
+          }
+        },
+
+        {
+          "include": "#code-block"
+        },
+        {
+          "include": "#block-expression"
+        },
+
+        {
+          "begin": "([a-z()-]+ )*(new)([(])",
+          "end": "\\)",
+          "beginCaptures": {
+            "1": { "name": "storage.modifier.tl" },
+            "2": { "name": "entity.name.type" },
+            "3": { "name": "punctuation.tl" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.tl" }
+          },
+          "patterns": [{ "include": "#method-parameters" }]
+        },
+
+        {
+          "include": "#field"
+        },
+        {
+          "include": "#method-definition"
+        }
+      ]
+    },
+
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.tl",
+          "match": "//.*"
+        },
+        {
+          "include": "#multi-line-comment"
+        }
+      ]
+    },
+    "multi-line-comment": {
+      "begin": "/\\*",
+      "end": "\\*/",
+      "name": "comment.tl"
+    },
+
+    "class-type-fqn": {
+      "match": "([a-z0-9_]+|mod)((\\.)[a-z][a-z0-9_]*)*(\\.)([A-Z$_][a-z$_]+)",
+      "captures": {
+        "1": { "name": "constant.tl.module" },
+        "2": {
+          "name": "variable.other.package.tl",
+          "patterns": [
+            {
+              "match": "\\.",
+              "name": "punctuation.tl"
+            }
+          ]
+        },
+        "4": { "name": "punctuation.tl" },
+        "5": { "name": "constant.tl.class_name" }
+      }
+    },
+
+    "package": {
+      "match": "([a-z0-9_]+|mod)((\\.)[a-z][a-z0-9_]*)+",
+      "captures": {
+        "1": { "name": "constant.tl.module" },
+        "2": {
+          "name": "variable.other.package.tl",
+          "patterns": [
+            {
+              "match": "\\.",
+              "name": "punctuation.tl"
+            }
+          ]
+        }
+      }
+    },
+
+    "strings": {
+      "patterns": [{ "include": "#normal-string" }, { "include": "#interpolated-string" }]
+    },
+    "normal-string": {
+      "match": "\"[^\"]*\"",
+      "name": "string.tl"
+    },
+    "interpolated-string": {
+      "begin": "\\$\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "begin": "\\$\\{",
+          "end": "}",
+          "beginCaptures": { "0": { "name": "punctuation.tl" } },
+          "endCaptures": { "0": { "name": "punctuation.tl" } },
+          "name": "text.tl"
+        },
+        {
+          "name": "string.interpolated.tl",
+          "match": "\\w+|."
+        }
+      ],
+      "beginCaptures": { "0": { "name": "string.interpolated.tl" } },
+      "endCaptures": { "0": { "name": "string.interpolated.tl" } }
+    },
+
+    "number": {
+      "match": "(0x[0-9A-F]+)|(\\d+(\\.\\d+)?)",
+      "name": "constant.numeric.tl"
+    },
+
+    "identifier": {
+      "match": "[a-zA-Z_][a-zA-Z0-9_$]*",
+      "name": "identifier.tl"
+    },
+    "class-identifier": {
+      "match": "[A-Z][a-zA-Z0-9_$]+",
+      "name": "identifier.tl"
+    },
+
+    "modifiers": {
+      "match": "(\\s?[a-z_]+(\\([a-z_]+\\))?)*",
+      "name": "storage.modifier.tl",
+      "captures": {
+        "1": {
+          "patterns": [
+            {
+              "match": "[()]",
+              "name": "punctuation.tl"
+            }
+          ]
+        }
+      }
+    },
+
+    "attribute": {
+      "patterns": [
+        {
+          "begin": "(\\[[a-zA-Z]+)(\\()",
+          "beginCaptures": {
+            "1": { "name": "entity.other.attribute-name.tl" },
+            "2": { "name": "punctuation.tl" }
+          },
+          "end": "(\\))(\\])",
+          "endCaptures": {
+            "1": { "name": "punctuation.tl" },
+            "2": { "name": "entity.other.attribute-name.tl" }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "match": "\\[[a-zA-Z]+\\]",
+          "name": "entity.other.attribute-name.tl"
+        }
+      ]
+    },
+
+    "type": {
+      "match": "((uint|int|ulong|long|float|double|string|object|void|self)[?!]?)|(([a-zA-Z0-9$_.<>]+)[?!]?)",
+      "captures": {
+        "1": {
+          "name": "storage.type.primitive.tl",
+          "patterns": [
+            {
+              "match": "[?!]",
+              "name": "punctuation.tl"
+            }
+          ]
+        },
+        "3": {
+          "patterns": [
+            {
+              "match": "[^.]",
+              "captures": {
+                "0": {
+                  "patterns": [
+                    {
+                      "match": "[<>?!]",
+                      "name": "punctuation.tl"
+                    },
+                    {
+                      "match": "[a-zA-Z0-9$_]+",
+                      "name": "constant.tl.class_name"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+
+    "code-block": {
+      "begin": "[{]",
+      "end": "[}]",
+      "beginCaptures": {
+        "0": { "name": "punctuation.tl" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.tl" }
+      },
+      "patterns": [
+        { "include": "#statement" },
+        { "include": "#code" }
+      ]
+    },
+    "block-expression": {
+      "match": "(=>) (.*)",
+      "captures": {
+        "1": { "name": "punctuation.tl" },
+        "2": {
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        }
+      }
+    },
+
+    "statement": {
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#statement-expression"
+        }
+      ]
+    },
+
+    "expression": {
+      "patterns": [
+        {
+          "include": "#multi-line-comment"
+        },
+        {
+          "include": "#strings"
+        },
+        {
+          "include": "#number"
+        },
+        {
+          "match": "true|false",
+          "name": "constant.language.tl"
+        },
+        {
+          "include": "#type"
+        },
+        {
+          "include": "#statement-expression"
+        }
+      ]
+    },
+
+    "statement-expression": {
+      "patterns": [
+        {
+          "begin": "([A-Za-z0-9_$]+)\\(",
+          "end": "\\)",
+          "beginCaptures": {
+            "0": { "name": "punctuation.tl" },
+            "1": { "name": "identifier.tl" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.tl" }
+          },
+          "patterns": [
+            {
+              "include": "#method-parameters"
+            }
+          ]
+        }
+      ]
+    },
+
+    "generic-type-definitions": {
+      "match": "(([^,<>]+)(,[^,<>]+)*)",
+      "captures": {
+        "1": {
+          "patterns": [
+            {
+              "match": ",",
+              "name": "punctuation.tl"
+            },
+            {
+              "include": "#generic-type-definition"
+            }
+          ]
+        }
+      }
+    },
+
+    "generic-type-definition": {
+      "match": "([A-Z0-9]+)(( : [^&: ]+)?( & [^&: ]+)*)",
+      "captures": {
+        "1": { "name": "constant.tl.class_name" },
+        "2": {
+          "patterns": [
+            {
+              "match": "[:&]",
+              "name": "punctuation.tl"
+            },
+            {
+              "include": "#type"
+            }
+          ]
+        }
+      }
+    },
+
+    "primary-constructor": {
+      "match": "([^,()]+)((,)([^,()]+))*",
+      "captures": {
+        "1": { "patterns": [{ "include": "#field-like" }] },
+        "2": {
+          "patterns": [
+            {
+              "match": ",",
+              "name": "punctuation.tl"
+            },
+            { "include": "#field-like" }
+          ]
+        }
+      }
+    },
+
+    "method-parameters": {
+      "match": "[^)]*",
+      "captures": {
+        "0": {
+          "patterns": [
+            {
+              "match": ",",
+              "name": "punctuation.tl"
+            },
+            {
+              "include": "#attribute"
+            },
+            {
+              "match": "([^ ]+) ([a-zA-Z0-9$_]+)",
+              "captures": {
+                "1": {
+                  "patterns": [
+                    {
+                      "include": "#type"
+                    }
+                  ]
+                },
+                "2": {
+                  "patterns": [
+                    {
+                      "include": "#identifier"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "include": "#expression"
+            }
+          ]
+        }
+      }
+    },
+
+    "field": {
+      "patterns": [
+        {
+          "match": "([^=]+) (=) (.*)$",
+          "captures": {
+            "1": { "patterns": [{ "include": "#field-like" }] },
+            "2": { "name": "punctuation.tl" },
+            "3": { "patterns": [{ "include": "#expression" }] }
+          }
+        },
+        {
+          "match": "[^={}]+$",
+          "captures": {
+            "0": { "patterns": [{ "include": "#field-like" }] }
+          }
+        }
+      ]
+    },
+
+    "field-like": {
+      "match": "(([a-z()\\-]+\\s+)+)?(\\[[^\\]]+\\]\\s+)*([a-zA-Z0-9$_<>]+[!?]?)\\s+([a-zA-Z0-9_$]+)",
+      "captures": {
+        "1": { "name": "storage.modifier.tl" },
+        "3": { "patterns": [{ "include": "#attribute" }] },
+        "4": { "patterns": [{ "include": "#type" }] },
+        "5": { "patterns": [{ "include": "#identifier" }] }
+      }
+    },
+
+    "method-definition": {
+      "begin": "([a-z()-]+ )*([a-zA-Z0-9$_<>]+[!?]?) ([a-zA-Z_$]+)([(])",
+      "end": "\\)",
+      "name": "storage.modifier.tl",
+      "beginCaptures": {
+        "2": { "patterns": [{ "include": "#type" }] },
+        "3": { "patterns": [{ "include": "#identifier" }] },
+        "4": { "name": "punctuation.tl" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.tl" }
+      },
+      "patterns": [
+        {
+          "include": "#method-parameters"
+        }
+      ]
+    }
+  }
+}

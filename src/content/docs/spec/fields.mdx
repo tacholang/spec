@@ -1,0 +1,89 @@
+---
+title: Fields
+description: Tacholang field specifications.
+---
+
+Fields are a way to store information inside classes. A field always consists of a data type and a name. Fields may additionally declare
+a visibility modifier, field modifiers, and an initializer expression.
+
+A few examples of fields:
+
+```tl
+private get(internal) int myValue = 2
+```
+
+```tl
+// A simple field. The default initialization value
+//   is `0` for `int` types.
+int value
+
+// A field with an initializer expression.
+int value = 24
+
+// A "private final" field.
+private final string name = "Strokkur24"
+
+// A "public lazy" field with a more complex initializer.
+public lazy List<string> NAMES = List.of("Eva", "Lana", "Herald")
+
+// A private field with a public getter
+private get int myValue = 2
+
+// A private field with an internal getter
+private get(internal) int myValue = 2
+
+// An attributed field
+[SerializedName("id")]
+public serialize uint databaseId
+```
+
+## Modifiers
+
+### Visibility modifiers
+
+A field may have the following visibility modifiers:
+
+- `private`: The field is only visible inside the current file.
+- `protected`: Classes that extend this one may also access the file.
+- `package-private`: **Default**. The field can also be accessed inside the current package.
+- `package-internal`: The field may be accessed from child packages, too.
+- `internal`: The field may be accessed inside the current module.
+- `public`: The field may be accessed from everywhere, even outside the module.
+
+It is recommended that you keep the visibility of a field as low as possible and instead provide get/set methods.
+
+### Field modifiers
+
+A field may have multiple field modifiers. Not all of them are compatible with each other, though.
+
+- `final`: Marks that a field's value cannot change. The value of this field must be set with am initializer *or* inside a constructor
+and cannot be changed again.
+
+- `lazy`: This modifier marks a field implicitly as `final`, thus needs not be used together with it. Runs the initializer as soon as
+the field's value is requested for the first time. If the field is never accessed, the initializer will never be run.
+
+- `get` and `set`: These modifiers add public getter and setter methods (always `void <name>(<type> value)` and `<type> <name>()`)
+to the class, which reference this field. This makes getter/setter methods much quicker to create. The `set` modifier is incompatible
+with fields modified with `final` or `lazy`. <p>You can change the visibility modifier of the implicit getter/setter methods
+by providing a visibility modifier to the field modifier.</p>
+
+- `serialize`: Can be used by libraries doing object serialization/mapping to have first-class access to the field. Whilst mapping to
+an object, this modifier allows direct mapping of the type before the constructor is run.
+
+### Custom modifiers
+
+As with all other elements, custom modifiers can be added with compiler plugins.
+
+## Attributes
+
+Attributes can be added to fields. The following are perfectly fine places for attributes.
+You cannot put attributes in between modifiers.
+
+```tl
+[Named("hay-1")]
+public static final string HAY_1 = "hay!"
+
+[Named("hay-2")] public static final string HAY_2 = "hay!"
+
+public static final [Named("hay-2")] string HAY_2 = "hay!"
+```
