@@ -10,7 +10,7 @@ export default defineConfig({
     starlight({
       plugins: [starlightThemeRapide()],
       title: "Tacholang",
-      social: [{ icon: "github", label: "GitHub", href: "https://github.com/tacholang/docs" }],
+      social: [{ icon: "github", label: "GitHub", href: "https://github.com/tacholang/spec" }],
       sidebar: [
         {
           label: "Language Specification",
