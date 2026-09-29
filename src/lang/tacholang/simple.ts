@@ -48,4 +48,9 @@ export const booleanValue: tmPattern = {
   name: "constant.language.tl",
 };
 
-export const simpleValues: tmPattern[] = [...stringValue, numberValue, booleanValue];
+export const constantValues: tmPattern = {
+  match: rx(/null|this|self|super/),
+  name: "constant.language.tl"
+}
+
+export const simpleValues: tmPattern[] = [...stringValue, numberValue, booleanValue, constantValues];

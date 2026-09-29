@@ -9,19 +9,17 @@ A module always has the following file structure:
 
 <FileTree>
   - src/
-    - module.tl
     - ...
   - res/
     - ...
   - test/
     - ...
-  - tacho-module.toml
+  - module.tls
 </FileTree>
 
-A module is the highest-level grouping of Tacholang code. Every module always has a `tacho-module.toml` file, which specifies
+A module is the highest-level grouping of Tacholang code. Every module always has a `module.tls` file, which specifies
 the module information (name, version, description, authors, and other). The `src` folder contains all the code for that module,
-whilst the `res` folder contains resources that will be embedded into the compiled binary. At the root of the `src` folder, a
-`module.tl` file may be present. **This file is required if the module is published as a library**. The `test` folder is a special
+whilst the `res` folder contains resources that will be embedded into the compiled binary. The `test` folder is a special
 directory, which may contain unit-testing code. Files inside that folder are not included in compiled binaries and completely
 ignore all visibility modifiers of the module source code, allowing for extensive unit testing.
 
@@ -29,36 +27,50 @@ Modules are self-contained. The `internal` visibility modifier makes code visibl
 exceptions. Resources are also self-contained inside a module. If you wish to expose resources from your module to library consumers,
 you must provide functions which return the resources.
 
-A `module.tl` file looks like this:
+`*.tls` files are special Tacholang script files which expose only certain subset of functionality of a full Tacholang source file. A
+`module.tls` file may look like this:
 
-```tl-module title="module.tl"
+```tl-module title="module.tls"
+// The module name is the public identifier of this module.
 // A module may be attributed. These attributes
 //   are retrievable during runtime.
-// The module name must match the one in tacho-module.toml.
-[some_attribute]
-module module_name
+module module_name some-attribute
 
-//
-// Options for library
-//
+// Dependencies can be configured via the dependencies block.
+dependencies {
+  // From a central source
+  central vectors
+  // From a GitHub repository
+  github "Strokkur424/discord_tl" as discord
+  // Local library
+  local "/home/strokk/libs/web-library/"
+}
 
-// Set path for incoming connections.
-library-path "/dev"
+// Tacholang language extensions need to always be configured module-wide.
+extensions {
+  from core async
+  from discord_tl command as dc-command
+}
 
-// Multiple option values may be present.
-// Configure initial and max pool size.
-library-pool-size 5 20
+// Each library may have its own configuration, too!
+web {
+  // Set path for incoming connections.
+  path "/dev"
 
-// Some options may be repeated. This makes the option appear as
-//   an array for the library definiting these options.
-// Add path handlers.
-library-handler mod.handlers.Warning "/warning"
-library-handler mod.handlers.Note "/note"
+  // Multiple option values may be present.
+  // Configure initial and max pool size.
+  pool-size 5 20
 
-// Options can also reference classes from another module.
-library-handler generic_errors.ErrorHandler "/error"
+  // Some options may be repeated. This makes the option appear as
+  //   an array for the library defining these options.
+  // Add path handlers.
+  handler mod.handler.Warning "/warning"
+  handler mod.handles.Note "/note"
+  // Options can also reference classes from another module.
+  handler web.ErrorHandler "/error"
+}
 ```
 
-Libraries may use the `module.tl` file as a sort of configuration file for their library. This is especially useful for libraries to
+Libraries may use the `module.tls` file as a sort of configuration file for their library. This is especially useful for libraries to
 set default values. Depending on the definition of the options in the library, these options may be present only during compile-time
 or be retrievable in runtime too.

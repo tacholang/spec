@@ -3,6 +3,9 @@ import starlight from "@astrojs/starlight";
 import starlightThemeRapide from "starlight-theme-rapide";
 
 export default defineConfig({
+  markdown: {
+    gfm: true
+  },
   integrations: [
     starlight({
       plugins: [starlightThemeRapide()],
@@ -11,7 +14,13 @@ export default defineConfig({
       sidebar: [
         {
           label: "Language Specification",
-          items: [{ slug: "spec/modules" }, { slug: "spec/files" }, { slug: "spec/classes" }, { slug: "spec/fields" }],
+          items: [
+            { slug: "spec/modules" },
+            { slug: "spec/files" },
+            { slug: "spec/classes" },
+            { slug: "spec/fields" },
+            { slug: "spec/syntax-reference" },
+          ],
         },
         {
           label: "Standard Library",

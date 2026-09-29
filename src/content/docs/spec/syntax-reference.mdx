@@ -1,0 +1,82 @@
+---
+title: Syntax Reference
+---
+
+This page gives an in-depth overview of syntax element types for `*.tls` and `*.tl` file types.
+
+## Tacholang Script (*.tls)
+
+Tacholang Script files serve the purpose of declarative configuration files. Whilst they allow for
+calling methods, declaring methods or classes is not possible. They also do not run on the same stdlib
+as regular Tacholang. A TLS provider must explicitly expose all methods.
+
+### Comments
+
+Single-line comments can be defined with `//`. Multiline comments with `/* */`.
+
+### Data Types
+
+A couple of data types exists.
+
+| Type Name         | Description                                        | Example                              |
+|-------------------|----------------------------------------------------|--------------------------------------|
+| identifier        | A word of alphanumerical characters, `-`, and `_`. | `core`, `log4tl`, `discord_tl`       |
+| classref          | Reference to a class on the classpath.             | `std.collection.List`                |
+| int               | A whole number, may be negative. 64 bits.          | `5`, `-26`, `0x80`                   |
+| uint              | A whole, positive number. 64 bits.                 | `83`, `0xFFAA`                       |
+| float             | A floating-point number. 128 bits. Signed.         | `26.005`, `-0.00006`                 |
+| ufloat            | A positive floating-point number. 128 bits.        | `8882.2`, `25`                       |
+| string            | A string of characters, enclosed in `"`.           | `"foo"`, `"Templates: ${true}"`      |
+| char              | A single unicode character.                        | `'a'`, `'\u2556`, `\a32`             |
+| bool              | A true of false value.                             | `true`, `false`                      |
+| literal(types...) | A single value from the declared types             | `word` for `literal(word, sentence)` |
+
+Data types may be made nullable by appending a null-type annotation `?` to the type: `string?`.
+
+### Variables
+
+TLS supports variables. These can be defined anywhere and are scoped according to regular variable scope rules.
+This means variables cannot be accessed before they are defined. If inside a block, a variable falls out of scope once the
+block ends. Variables can be re-declared, in which case the previous variable falls out of scope.
+
+In TLS, variables are implicitly final (the keyword does not even exist) and have to have a value set initially. The variable name
+must contain only alphanumerical, `_`, `$` characters. The variable name must start with an alphabetical or `_` character.
+
+Examples:
+```tl
+string lib_version = "26.2.4"
+string lib_version = "${lib_version}-beta.2"
+ufloat = 26 + 24
+classref = mod.util.TargetUtil
+```
+
+### Declaration
+
+A declaration ist how configuration values are set. A declaration always has a name. It may have any number of parameters, and it may
+have any number of flags (which each may have additional parameters).
+
+The following are all valid declarations:
+```tl
+configure-arm64
+configure-x86 native-cpu // native-cpu is a flag
+add-library "libraryname" // string parameter
+timeout 60 unit seconds // flag unit has a literal parameter
+```
+
+### Scoped declarations
+
+Declarations may also be scoped. A scope declaration always consists of a name, optional parameters, and a block. There may be methods,
+variables, and additional declaration types, which are only resolvable within the scoped declaration.
+
+```tl
+build {
+  name "${project_name}-${architecture}""
+  version "${project_version}+${git_ref_short}"
+}
+
+// Overloaded scoped declaration with a literal parameter
+build x86 {
+  name project_name
+  version "${project_version}+${git_ref_short}"
+}
+```

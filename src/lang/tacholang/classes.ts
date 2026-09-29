@@ -21,6 +21,39 @@ const primaryConstructor: tmPattern = {
   },
 };
 
+const classSingleLineNested: tmPattern = {
+  begin: rx(/(.*)(class|record|enum) ([A-Za-z0-9$_]+)(<[^>]+>)?(\([^)]*\))?\s+({)/),
+  beginCaptures: {
+    "1": { patterns: [modifiers] },
+    "2": { name: "storage.class-type.tl" },
+    "3": { name: "constant.tl.class_name" },
+    "4": {
+      patterns: [
+        {
+          match: rx(/[<>]/),
+          name: "punctuation.tl",
+        },
+        genericTypeDefinitions,
+      ],
+    },
+    "5": {
+      patterns: [
+        {
+          match: "[(),]",
+          name: "punctuation.tl",
+        },
+        fieldLike,
+      ],
+    },
+    "6": { name: "punctuation.tl" },
+  },
+  patterns: [{ include: "#classScope" }],
+  end: rx(/}/),
+  endCaptures: {
+    "0": { name: "punctuation.tl" },
+  },
+};
+
 const withPrimaryConstructor: tmPattern = {
   begin: rx(/(.*)(class|record|enum) ([A-Za-z0-9$_]+)(<[^>]+>)?(\()/),
   beginCaptures: {
@@ -107,4 +140,4 @@ const extendsAndImplementsPatterns: tmPattern[] = [
   },
 ];
 
-export default [withPrimaryConstructor, withoutPrimaryConstructor, ...extendsAndImplementsPatterns];
+export default [classSingleLineNested, withPrimaryConstructor, withoutPrimaryConstructor, ...extendsAndImplementsPatterns];

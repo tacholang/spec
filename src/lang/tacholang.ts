@@ -1,8 +1,9 @@
 import type { LanguageRegistration } from "shiki";
 import { multiLineComment, singleLineComment } from "./tacholang/simple.ts";
-import code from "./tacholang/code.ts";
+import { classScope, code } from "./tacholang/code.ts";
 import { rx, type tmPattern } from "./util.ts";
 import { fullyQualifiedPattern } from "./tacholang/type.ts";
+import { expression } from "./tacholang/stmt-expr.ts";
 
 const packagePattern: tmPattern = {
   match: "([a-z0-9_]+|mod)((\\.)[a-z][a-z0-9_]*)+",
@@ -23,7 +24,11 @@ const packagePattern: tmPattern = {
 const tacholang: LanguageRegistration = {
   name: "tl",
   scopeName: "text.tl",
-  repository: {},
+  repository: {
+    code: code,
+    classScope: classScope,
+    expression: expression
+  },
 
   patterns: [
     singleLineComment,
@@ -44,7 +49,7 @@ const tacholang: LanguageRegistration = {
       },
     },
 
-    code,
+    classScope,
   ],
 };
 
