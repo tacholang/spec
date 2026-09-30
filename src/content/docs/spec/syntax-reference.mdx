@@ -10,6 +10,19 @@ Tacholang Script files serve the purpose of declarative configuration files. Whi
 calling methods, declaring methods or classes is not possible. They also do not run on the same stdlib
 as regular Tacholang. A TLS provider must explicitly expose all methods.
 
+### Format
+
+A generic TLS file can use a format specifier at the start of the file (has to be the first statement),
+which defines the possible declarations a TLS file may hold, as well as any pre-defined variables or methods.
+A format may also introduce new data types.
+
+Example of format specifiers:
+```
+!builtin core/format // The built-in format, which lets you create new formats
+!github external/my-lib file format.tls // Fetch a file from a GitHub repository
+!url https://strokkur.net/my-own-format // Fetch from URL
+```
+
 ### Comments
 
 Single-line comments can be defined with `//`. Multiline comments with `/* */`.
@@ -18,20 +31,19 @@ Single-line comments can be defined with `//`. Multiline comments with `/* */`.
 
 A couple of data types exists.
 
-| Type Name         | Description                                        | Example                              |
-|-------------------|----------------------------------------------------|--------------------------------------|
-| identifier        | A word of alphanumerical characters, `-`, and `_`. | `core`, `log4tl`, `discord_tl`       |
-| classref          | Reference to a class on the classpath.             | `std.collection.List`                |
-| int               | A whole number, may be negative. 64 bits.          | `5`, `-26`, `0x80`                   |
-| uint              | A whole, positive number. 64 bits.                 | `83`, `0xFFAA`                       |
-| float             | A floating-point number. 128 bits. Signed.         | `26.005`, `-0.00006`                 |
-| ufloat            | A positive floating-point number. 128 bits.        | `8882.2`, `25`                       |
-| string            | A string of characters, enclosed in `"`.           | `"foo"`, `"Templates: ${true}"`      |
-| char              | A single unicode character.                        | `'a'`, `'\u2556`, `\a32`             |
-| bool              | A true of false value.                             | `true`, `false`                      |
-| literal(types...) | A single value from the declared types             | `word` for `literal(word, sentence)` |
+| Type Name  | Description                                        | Example                                |
+|------------|----------------------------------------------------|----------------------------------------|
+| identifier | A word of alphanumerical characters, `-`, and `_`. | `log4tl`, `discord_tl`, `disable-boot` |
+| int        | A whole number, may be negative. 64 bits.          | `5`, `-26`, `0x80`                     |
+| uint       | A whole, positive number. 64 bits.                 | `83`, `0xFFAA`                         |
+| float      | A floating-point number. 128 bits. Signed.         | `26.005`, `-0.00006`                   |
+| ufloat     | A positive floating-point number. 128 bits.        | `8882.2`, `25`                         |
+| string     | A string of characters, enclosed in `"`.           | `"foo"`, `"Templates: ${true}"`        |
+| char       | A single unicode character.                        | `'a'`, `'\u2556`, `\a32`               |
+| bool       | A true of false value.                             | `true`, `false`                        |
 
-Data types may be made nullable by appending a null-type annotation `?` to the type: `string?`.
+A TLS file always defines these data types. However, the format may introduce additional data types not listed here via
+`typedef <name> <regex>` declarations in a format definition file.
 
 ### Variables
 
@@ -63,9 +75,9 @@ add-library "libraryname" // string parameter
 timeout 60 unit seconds // flag unit has a literal parameter
 ```
 
-### Scoped declarations
+#### Scoped
 
-Declarations may also be scoped. A scope declaration always consists of a name, optional parameters, and a block. There may be methods,
+Declarations may also be scoped. A scope declaration adds a code block. There may be methods,
 variables, and additional declaration types, which are only resolvable within the scoped declaration.
 
 ```tl
